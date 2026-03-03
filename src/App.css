@@ -1,42 +1,201 @@
-#root {
-  max-width: 1280px;
+:root {
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  color: #111827;
+  background: #f3f4f6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.container {
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  padding: 32px 16px 48px;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+h1 {
+  margin: 0;
+  font-size: 1.7rem;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.sub {
+  margin-top: 8px;
+  color: #4b5563;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+}
+
+.layout {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 14px;
 }
 
 .card {
-  padding: 2em;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px;
 }
 
-.read-the-docs {
-  color: #888;
+.sidebar h3 {
+  margin: 0 0 12px;
+}
+
+.createDoc {
+  display: flex;
+  gap: 8px;
+}
+
+.createDoc input,
+.authCard input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+button {
+  padding: 9px 12px;
+  border: none;
+  border-radius: 8px;
+  background: #111827;
+  color: white;
+  cursor: pointer;
+}
+
+button.ghost {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.docList {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.docList li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 6px;
+}
+
+.docList li.active {
+  border-color: #4f46e5;
+  background: #eef2ff;
+}
+
+.docBtn {
+  text-align: left;
+  background: transparent;
+  color: #111827;
+  padding: 4px;
+}
+
+.docBtn span {
+  display: block;
+  font-weight: 600;
+}
+
+.docBtn small {
+  color: #6b7280;
+}
+
+.delBtn {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: #ef4444;
+}
+
+.editorWrap .toolbar {
+  margin-bottom: 8px;
+  color: #4b5563;
+}
+
+.editor {
+  min-height: 360px;
+  outline: none;
+  line-height: 1.6;
+}
+
+.notes {
+  margin-top: 10px;
+  color: #4b5563;
+}
+
+.auth {
+  max-width: 560px;
+}
+
+.authCard {
+  margin-top: 18px;
+  display: grid;
+  gap: 10px;
+}
+
+/* Tiptap collaboration cursor style */
+.collaboration-cursor__caret {
+  border-left: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  margin-left: -1px;
+  margin-right: -1px;
+  pointer-events: none;
+  position: relative;
+  word-break: normal;
+}
+
+.collaboration-cursor__label {
+  border-radius: 999px;
+  color: white;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 600;
+  left: -1px;
+  line-height: normal;
+  padding: 3px 8px;
+  position: absolute;
+  top: -1.4em;
+  user-select: none;
+  white-space: nowrap;
+}
+
+@media (max-width: 880px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    flex-direction: column;
+  }
 }
