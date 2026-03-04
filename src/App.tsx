@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Collaboration from '@tiptap/extension-collaboration'
@@ -97,33 +97,42 @@ function App() {
 
   const selectedDoc = docs.find((d) => d.id === selectedDocId) ?? docs[0]
 
-  const { ydoc, provider } = useMemo(() => {
+  const { ydoc, provider, persistence } = useMemo(() => {
     const room = selectedDoc?.id ?? 'jobhunt-frontend-room'
     const ydoc = new Y.Doc()
-
-    new IndexeddbPersistence(`syncscribe-${room}`, ydoc)
-
+    const persistence = new IndexeddbPersistence(`syncscribe-${room}`, ydoc)
     const provider = new WebrtcProvider(room, ydoc)
 
     if (user) {
       provider.awareness.setLocalStateField('user', { name: user.name, color: user.color })
     }
 
-    return { ydoc, provider }
+    return { ydoc, provider, persistence }
   }, [selectedDoc?.id, user])
 
-  const editor = useEditor({
-    extensions: [
-      StarterKit.configure({ history: false }),
-      Collaboration.configure({ document: ydoc }),
-      CollaborationCursor.configure({ provider, user: user ? { name: user.name, color: user.color } : { name: randomName(), color: randomColor() } }),
-    ],
-    editorProps: {
-      attributes: {
-        class: 'editor',
+  useEffect(() => {
+    return () => {
+      provider.destroy()
+      ydoc.destroy()
+      persistence.destroy()
+    }
+  }, [provider, ydoc, persistence])
+
+  const editor = useEditor(
+    {
+      extensions: [
+        StarterKit.configure({ history: false }),
+        Collaboration.configure({ document: ydoc }),
+        CollaborationCursor.configure({ provider, user: user ? { name: user.name, color: user.color } : { name: randomName(), color: randomColor() } }),
+      ],
+      editorProps: {
+        attributes: {
+          class: 'editor',
+        },
       },
     },
-  })
+    [ydoc, provider, user?.name, user?.color],
+  )
 
   if (!user) {
     return (
