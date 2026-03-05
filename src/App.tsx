@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Collaboration from '@tiptap/extension-collaboration'
@@ -94,6 +94,7 @@ function App() {
   const [docs, setDocs] = useState<DocItem[]>(() => loadDocs())
   const [selectedDocId, setSelectedDocId] = useState<string>(() => loadDocs()[0]?.id ?? 'jobhunt-frontend-room')
   const [newTitle, setNewTitle] = useState('')
+  const updateTimestampTimer = useRef<number | null>(null)
 
   const selectedDoc = docs.find((d) => d.id === selectedDocId) ?? docs[0]
 
@@ -117,6 +118,31 @@ function App() {
       persistence.destroy()
     }
   }, [provider, ydoc, persistence])
+
+  useEffect(() => {
+    const refreshUpdatedAt = () => {
+      if (updateTimestampTimer.current) window.clearTimeout(updateTimestampTimer.current)
+      updateTimestampTimer.current = window.setTimeout(() => {
+        const now = Date.now()
+        setDocs((prev) => {
+          const next = prev
+            .map((doc) => (doc.id === selectedDocId ? { ...doc, updatedAt: now } : doc))
+            .sort((a, b) => b.updatedAt - a.updatedAt)
+
+          saveDocs(next)
+          return next
+        })
+      }, 800)
+    }
+
+    ydoc.on('update', refreshUpdatedAt)
+
+    return () => {
+      ydoc.off('update', refreshUpdatedAt)
+      if (updateTimestampTimer.current) window.clearTimeout(updateTimestampTimer.current)
+      updateTimestampTimer.current = null
+    }
+  }, [ydoc, selectedDocId])
 
   const editor = useEditor(
     {
