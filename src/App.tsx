@@ -94,6 +94,7 @@ function App() {
   const [docs, setDocs] = useState<DocItem[]>(() => loadDocs())
   const [selectedDocId, setSelectedDocId] = useState<string>(() => loadDocs()[0]?.id ?? 'jobhunt-frontend-room')
   const [newTitle, setNewTitle] = useState('')
+  const [collaboratorCount, setCollaboratorCount] = useState(1)
   const updateTimestampTimer = useRef<number | null>(null)
 
   const selectedDoc = docs.find((d) => d.id === selectedDocId) ?? docs[0]
@@ -143,6 +144,19 @@ function App() {
       updateTimestampTimer.current = null
     }
   }, [ydoc, selectedDocId])
+
+  useEffect(() => {
+    const syncCollaboratorCount = () => {
+      setCollaboratorCount(provider.awareness.getStates().size)
+    }
+
+    syncCollaboratorCount()
+    provider.awareness.on('change', syncCollaboratorCount)
+
+    return () => {
+      provider.awareness.off('change', syncCollaboratorCount)
+    }
+  }, [provider])
 
   const editor = useEditor(
     {
@@ -202,7 +216,7 @@ function App() {
           <p className="sub">Yjs + Tiptap + WebRTC · 로그인/문서목록/협업 2단계 구현</p>
         </div>
         <div className="profile">
-          <span className="dot" style={{ backgroundColor: user.color }} />
+          <span className="dot" style={{ backgroundColor: user.color }} aria-hidden="true" />
           <strong>{user.name}</strong>
           <button
             className="ghost"
@@ -220,25 +234,33 @@ function App() {
         <aside className="sidebar card">
           <h3>Documents</h3>
           <div className="createDoc">
+            <label htmlFor="new-doc-title" className="srOnly">새 문서 제목</label>
             <input
+              id="new-doc-title"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               placeholder="새 문서 제목"
+              aria-label="새 문서 제목"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') createDoc()
               }}
             />
-            <button onClick={createDoc}>생성</button>
+            <button onClick={createDoc} aria-label="새 문서 생성">생성</button>
           </div>
 
           <ul className="docList">
             {docs.map((doc) => (
               <li key={doc.id} className={doc.id === selectedDocId ? 'active' : ''}>
-                <button className="docBtn" onClick={() => setSelectedDocId(doc.id)}>
+                <button
+                  className="docBtn"
+                  onClick={() => setSelectedDocId(doc.id)}
+                  aria-current={doc.id === selectedDocId ? 'true' : undefined}
+                  aria-label={`${doc.title} 문서 열기`}
+                >
                   <span>{doc.title}</span>
                   <small>{new Date(doc.updatedAt).toLocaleDateString()}</small>
                 </button>
-                <button className="delBtn" onClick={() => deleteDoc(doc.id)} title="문서 삭제">
+                <button className="delBtn" onClick={() => deleteDoc(doc.id)} title="문서 삭제" aria-label={`${doc.title} 문서 삭제`}>
                   ×
                 </button>
               </li>
@@ -247,8 +269,9 @@ function App() {
         </aside>
 
         <section className="editorWrap">
-          <section className="toolbar">
+          <section className="toolbar" aria-live="polite">
             <span>Room ID: <b>{selectedDoc?.id}</b></span>
+            <span className="presence">현재 접속자 {collaboratorCount}명</span>
           </section>
 
           <section className="card">
