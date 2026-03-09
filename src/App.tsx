@@ -43,7 +43,17 @@ function defaultDocs(): DocItem[] {
 
 function loadUser() {
   const raw = localStorage.getItem(USER_KEY)
-  return raw ? (JSON.parse(raw) as UserProfile) : null
+  if (!raw) return null
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<UserProfile>
+    if (typeof parsed.id === 'string' && typeof parsed.name === 'string' && typeof parsed.color === 'string') {
+      return { id: parsed.id, name: parsed.name, color: parsed.color }
+    }
+    return null
+  } catch {
+    return null
+  }
 }
 
 function saveUser(user: UserProfile) {
@@ -53,9 +63,17 @@ function saveUser(user: UserProfile) {
 function loadDocs() {
   const raw = localStorage.getItem(DOCS_KEY)
   if (!raw) return defaultDocs()
+
   try {
-    const parsed = JSON.parse(raw) as DocItem[]
-    return parsed.length ? parsed : defaultDocs()
+    const parsed = JSON.parse(raw) as Partial<DocItem>[]
+    const sanitized = parsed
+      .filter(
+        (doc): doc is Required<Pick<DocItem, 'id' | 'title' | 'updatedAt'>> =>
+          typeof doc.id === 'string' && typeof doc.title === 'string' && typeof doc.updatedAt === 'number',
+      )
+      .map((doc) => ({ id: doc.id, title: doc.title.trim() || 'Untitled', updatedAt: doc.updatedAt }))
+
+    return sanitized.length ? sanitized : defaultDocs()
   } catch {
     return defaultDocs()
   }
