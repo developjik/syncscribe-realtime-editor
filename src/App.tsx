@@ -113,9 +113,17 @@ function App() {
   const [selectedDocId, setSelectedDocId] = useState<string>(() => loadDocs()[0]?.id ?? 'jobhunt-frontend-room')
   const [newTitle, setNewTitle] = useState('')
   const [collaboratorCount, setCollaboratorCount] = useState(1)
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const updateTimestampTimer = useRef<number | null>(null)
+  const copyStatusTimer = useRef<number | null>(null)
 
   const selectedDoc = docs.find((d) => d.id === selectedDocId) ?? docs[0]
+
+  useEffect(() => {
+    return () => {
+      if (copyStatusTimer.current) window.clearTimeout(copyStatusTimer.current)
+    }
+  }, [])
 
   const { ydoc, provider, persistence } = useMemo(() => {
     const room = selectedDoc?.id ?? 'jobhunt-frontend-room'
@@ -226,6 +234,20 @@ function App() {
     if (selectedDocId === docId) setSelectedDocId(next[0].id)
   }
 
+  const copyRoomId = async () => {
+    if (!selectedDoc?.id) return
+
+    try {
+      await navigator.clipboard.writeText(selectedDoc.id)
+      setCopyStatus('success')
+    } catch {
+      setCopyStatus('error')
+    }
+
+    if (copyStatusTimer.current) window.clearTimeout(copyStatusTimer.current)
+    copyStatusTimer.current = window.setTimeout(() => setCopyStatus('idle'), 1800)
+  }
+
   return (
     <main className="container">
       <header className="topbar">
@@ -288,7 +310,15 @@ function App() {
 
         <section className="editorWrap">
           <section className="toolbar" aria-live="polite">
-            <span>Room ID: <b>{selectedDoc?.id}</b></span>
+            <div className="roomInfo">
+              <span>Room ID: <b>{selectedDoc?.id}</b></span>
+              <button className="ghost copyBtn" onClick={copyRoomId} aria-label="Room ID 복사">
+                {copyStatus === 'success' ? '복사됨' : 'Room ID 복사'}
+              </button>
+              <span className={`copyStatus ${copyStatus}`} role="status">
+                {copyStatus === 'success' ? '클립보드에 복사되었습니다.' : copyStatus === 'error' ? '복사에 실패했습니다.' : ''}
+              </span>
+            </div>
             <span className="presence">현재 접속자 {collaboratorCount}명</span>
           </section>
 
