@@ -164,6 +164,32 @@ button.ghost {
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+.roomInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.copyBtn {
+  font-size: 0.84rem;
+  padding: 6px 10px;
+}
+
+.copyStatus {
+  min-width: 130px;
+  font-size: 0.83rem;
+}
+
+.copyStatus.success {
+  color: #065f46;
+}
+
+.copyStatus.error {
+  color: #b91c1c;
 }
 
 .presence {
