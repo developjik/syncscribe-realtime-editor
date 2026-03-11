@@ -114,14 +114,17 @@ function App() {
   const [newTitle, setNewTitle] = useState('')
   const [collaboratorCount, setCollaboratorCount] = useState(1)
   const [copyStatus, setCopyStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [pendingDeleteDocId, setPendingDeleteDocId] = useState<string | null>(null)
   const updateTimestampTimer = useRef<number | null>(null)
   const copyStatusTimer = useRef<number | null>(null)
+  const deleteConfirmTimer = useRef<number | null>(null)
 
   const selectedDoc = docs.find((d) => d.id === selectedDocId) ?? docs[0]
 
   useEffect(() => {
     return () => {
       if (copyStatusTimer.current) window.clearTimeout(copyStatusTimer.current)
+      if (deleteConfirmTimer.current) window.clearTimeout(deleteConfirmTimer.current)
     }
   }, [])
 
@@ -231,7 +234,24 @@ function App() {
     const next = docs.filter((d) => d.id !== docId)
     setDocs(next)
     saveDocs(next)
+    setPendingDeleteDocId(null)
     if (selectedDocId === docId) setSelectedDocId(next[0].id)
+  }
+
+  const requestDeleteDoc = (docId: string) => {
+    if (docs.length === 1) return
+
+    if (pendingDeleteDocId === docId) {
+      deleteDoc(docId)
+      return
+    }
+
+    setPendingDeleteDocId(docId)
+
+    if (deleteConfirmTimer.current) window.clearTimeout(deleteConfirmTimer.current)
+    deleteConfirmTimer.current = window.setTimeout(() => {
+      setPendingDeleteDocId(null)
+    }, 2500)
   }
 
   const copyRoomId = async () => {
@@ -300,8 +320,14 @@ function App() {
                   <span>{doc.title}</span>
                   <small>{new Date(doc.updatedAt).toLocaleDateString()}</small>
                 </button>
-                <button className="delBtn" onClick={() => deleteDoc(doc.id)} title="문서 삭제" aria-label={`${doc.title} 문서 삭제`}>
-                  ×
+                <button
+                  className={`delBtn ${pendingDeleteDocId === doc.id ? 'confirm' : ''}`}
+                  onClick={() => requestDeleteDoc(doc.id)}
+                  title={docs.length === 1 ? '최소 1개 문서는 유지해야 합니다.' : pendingDeleteDocId === doc.id ? '한 번 더 누르면 삭제됩니다.' : '문서 삭제'}
+                  aria-label={`${doc.title} 문서 ${pendingDeleteDocId === doc.id ? '삭제 확인' : '삭제'}`}
+                  disabled={docs.length === 1}
+                >
+                  {pendingDeleteDocId === doc.id ? '확인' : '×'}
                 </button>
               </li>
             ))}
