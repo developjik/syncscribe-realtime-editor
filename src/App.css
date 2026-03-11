@@ -151,10 +151,21 @@ button.ghost {
 }
 
 .delBtn {
-  width: 30px;
+  width: 42px;
   height: 30px;
   padding: 0;
   background: #ef4444;
+  font-size: 0.82rem;
+}
+
+.delBtn.confirm {
+  background: #b91c1c;
+  font-weight: 700;
+}
+
+.delBtn:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
 }
 
 .editorWrap .toolbar {
