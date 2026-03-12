@@ -83,6 +83,22 @@ function saveDocs(docs: DocItem[]) {
   localStorage.setItem(DOCS_KEY, JSON.stringify(docs))
 }
 
+function legacyCopyText(text: string) {
+  const textarea = document.createElement('textarea')
+  textarea.value = text
+  textarea.setAttribute('readonly', '')
+  textarea.style.position = 'fixed'
+  textarea.style.opacity = '0'
+  document.body.appendChild(textarea)
+  textarea.select()
+
+  try {
+    return document.execCommand('copy')
+  } finally {
+    document.body.removeChild(textarea)
+  }
+}
+
 function AuthScreen({ onLogin }: { onLogin: (name: string) => void }) {
   const [name, setName] = useState('')
 
@@ -257,12 +273,22 @@ function App() {
   const copyRoomId = async () => {
     if (!selectedDoc?.id) return
 
-    try {
-      await navigator.clipboard.writeText(selectedDoc.id)
-      setCopyStatus('success')
-    } catch {
-      setCopyStatus('error')
+    let copied = false
+
+    if (window.isSecureContext && navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(selectedDoc.id)
+        copied = true
+      } catch {
+        copied = false
+      }
     }
+
+    if (!copied) {
+      copied = legacyCopyText(selectedDoc.id)
+    }
+
+    setCopyStatus(copied ? 'success' : 'error')
 
     if (copyStatusTimer.current) window.clearTimeout(copyStatusTimer.current)
     copyStatusTimer.current = window.setTimeout(() => setCopyStatus('idle'), 1800)
@@ -337,12 +363,25 @@ function App() {
         <section className="editorWrap">
           <section className="toolbar" aria-live="polite">
             <div className="roomInfo">
-              <span>Room ID: <b>{selectedDoc?.id}</b></span>
+              <label htmlFor="room-id" className="srOnly">현재 Room ID</label>
+              <span className="roomIdLabel">Room ID</span>
+              <input
+                id="room-id"
+                className="roomIdInput"
+                value={selectedDoc?.id ?? ''}
+                readOnly
+                onFocus={(e) => e.currentTarget.select()}
+                aria-label="현재 Room ID"
+              />
               <button className="ghost copyBtn" onClick={copyRoomId} aria-label="Room ID 복사">
                 {copyStatus === 'success' ? '복사됨' : 'Room ID 복사'}
               </button>
               <span className={`copyStatus ${copyStatus}`} role="status">
-                {copyStatus === 'success' ? '클립보드에 복사되었습니다.' : copyStatus === 'error' ? '복사에 실패했습니다.' : ''}
+                {copyStatus === 'success'
+                  ? '클립보드에 복사되었습니다.'
+                  : copyStatus === 'error'
+                    ? '복사 권한이 없어 수동 복사가 필요합니다.'
+                    : ''}
               </span>
             </div>
             <span className="presence">현재 접속자 {collaboratorCount}명</span>

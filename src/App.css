@@ -185,6 +185,21 @@ button.ghost {
   flex-wrap: wrap;
 }
 
+.roomIdLabel {
+  font-weight: 600;
+}
+
+.roomIdInput {
+  min-width: 240px;
+  max-width: min(100%, 420px);
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #1f2937;
+  background: #fff;
+}
+
 .copyBtn {
   font-size: 0.84rem;
   padding: 6px 10px;
