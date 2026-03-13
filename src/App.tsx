@@ -22,6 +22,7 @@ type DocItem = {
 
 const USER_KEY = 'syncscribe-user'
 const DOCS_KEY = 'syncscribe-docs'
+const DOC_UPDATED_AT_THROTTLE_MS = 10_000
 
 function randomName() {
   const names = ['Sky', 'River', 'Nova', 'Mina', 'Joon', 'Luna', 'Theo', 'Hana']
@@ -170,7 +171,13 @@ function App() {
       if (updateTimestampTimer.current) window.clearTimeout(updateTimestampTimer.current)
       updateTimestampTimer.current = window.setTimeout(() => {
         const now = Date.now()
+
         setDocs((prev) => {
+          const targetDoc = prev.find((doc) => doc.id === selectedDocId)
+          if (!targetDoc || now - targetDoc.updatedAt < DOC_UPDATED_AT_THROTTLE_MS) {
+            return prev
+          }
+
           const next = prev
             .map((doc) => (doc.id === selectedDocId ? { ...doc, updatedAt: now } : doc))
             .sort((a, b) => b.updatedAt - a.updatedAt)
