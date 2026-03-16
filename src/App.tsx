@@ -22,6 +22,7 @@ type DocItem = {
 
 const USER_KEY = 'syncscribe-user'
 const DOCS_KEY = 'syncscribe-docs'
+const LAST_DOC_KEY = 'syncscribe-last-doc-id'
 const DOC_UPDATED_AT_THROTTLE_MS = 10_000
 
 function randomName() {
@@ -84,6 +85,15 @@ function saveDocs(docs: DocItem[]) {
   localStorage.setItem(DOCS_KEY, JSON.stringify(docs))
 }
 
+function loadLastSelectedDocId() {
+  const raw = localStorage.getItem(LAST_DOC_KEY)
+  return typeof raw === 'string' && raw.trim() ? raw : null
+}
+
+function saveLastSelectedDocId(docId: string) {
+  localStorage.setItem(LAST_DOC_KEY, docId)
+}
+
 function legacyCopyText(text: string) {
   const textarea = document.createElement('textarea')
   textarea.value = text
@@ -127,7 +137,16 @@ function AuthScreen({ onLogin }: { onLogin: (name: string) => void }) {
 function App() {
   const [user, setUser] = useState<UserProfile | null>(() => loadUser())
   const [docs, setDocs] = useState<DocItem[]>(() => loadDocs())
-  const [selectedDocId, setSelectedDocId] = useState<string>(() => loadDocs()[0]?.id ?? 'jobhunt-frontend-room')
+  const [selectedDocId, setSelectedDocId] = useState<string>(() => {
+    const docs = loadDocs()
+    const lastSelectedDocId = loadLastSelectedDocId()
+
+    if (lastSelectedDocId && docs.some((doc) => doc.id === lastSelectedDocId)) {
+      return lastSelectedDocId
+    }
+
+    return docs[0]?.id ?? 'jobhunt-frontend-room'
+  })
   const [newTitle, setNewTitle] = useState('')
   const [collaboratorCount, setCollaboratorCount] = useState(1)
   const [copyStatus, setCopyStatus] = useState<'idle' | 'success' | 'error'>('idle')
@@ -137,6 +156,19 @@ function App() {
   const deleteConfirmTimer = useRef<number | null>(null)
 
   const selectedDoc = docs.find((d) => d.id === selectedDocId) ?? docs[0]
+
+  useEffect(() => {
+    if (!selectedDoc && docs.length === 0) return
+
+    if (selectedDoc && selectedDoc.id !== selectedDocId) {
+      setSelectedDocId(selectedDoc.id)
+      return
+    }
+
+    if (selectedDoc) {
+      saveLastSelectedDocId(selectedDoc.id)
+    }
+  }, [selectedDoc, selectedDocId, docs.length])
 
   useEffect(() => {
     return () => {
