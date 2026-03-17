@@ -148,6 +148,7 @@ function App() {
     return docs[0]?.id ?? 'jobhunt-frontend-room'
   })
   const [newTitle, setNewTitle] = useState('')
+  const [docQuery, setDocQuery] = useState('')
   const [collaboratorCount, setCollaboratorCount] = useState(1)
   const [copyStatus, setCopyStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const [pendingDeleteDocId, setPendingDeleteDocId] = useState<string | null>(null)
@@ -156,6 +157,12 @@ function App() {
   const deleteConfirmTimer = useRef<number | null>(null)
 
   const selectedDoc = docs.find((d) => d.id === selectedDocId) ?? docs[0]
+  const filteredDocs = useMemo(() => {
+    const normalizedQuery = docQuery.trim().toLowerCase()
+    if (!normalizedQuery) return docs
+
+    return docs.filter((doc) => doc.title.toLowerCase().includes(normalizedQuery) || doc.id.toLowerCase().includes(normalizedQuery))
+  }, [docs, docQuery])
 
   useEffect(() => {
     if (!selectedDoc && docs.length === 0) return
@@ -373,8 +380,24 @@ function App() {
             <button onClick={createDoc} aria-label="새 문서 생성">생성</button>
           </div>
 
+          <div className="docSearch">
+            <label htmlFor="doc-search" className="srOnly">문서 검색</label>
+            <input
+              id="doc-search"
+              value={docQuery}
+              onChange={(e) => setDocQuery(e.target.value)}
+              placeholder="문서 제목/Room ID 검색"
+              aria-label="문서 검색"
+            />
+            {docQuery && (
+              <button className="ghost clearSearchBtn" onClick={() => setDocQuery('')} aria-label="검색어 지우기">
+                지우기
+              </button>
+            )}
+          </div>
+
           <ul className="docList">
-            {docs.map((doc) => (
+            {filteredDocs.map((doc) => (
               <li key={doc.id} className={doc.id === selectedDocId ? 'active' : ''}>
                 <button
                   className="docBtn"
@@ -397,6 +420,10 @@ function App() {
               </li>
             ))}
           </ul>
+
+          {filteredDocs.length === 0 && (
+            <p className="docEmpty" role="status">검색 결과가 없습니다. 다른 키워드로 찾아보세요.</p>
+          )}
         </aside>
 
         <section className="editorWrap">
