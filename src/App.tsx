@@ -148,6 +148,8 @@ function App() {
     return docs[0]?.id ?? 'jobhunt-frontend-room'
   })
   const [newTitle, setNewTitle] = useState('')
+  const [joinRoomId, setJoinRoomId] = useState('')
+  const [joinTitle, setJoinTitle] = useState('')
   const [docQuery, setDocQuery] = useState('')
   const [collaboratorCount, setCollaboratorCount] = useState(1)
   const [copyStatus, setCopyStatus] = useState<'idle' | 'success' | 'error'>('idle')
@@ -291,6 +293,33 @@ function App() {
     setNewTitle('')
   }
 
+  const joinDoc = () => {
+    const roomId = joinRoomId.trim()
+    if (!roomId) return
+
+    const matchedDoc = docs.find((doc) => doc.id === roomId)
+    if (matchedDoc) {
+      setSelectedDocId(matchedDoc.id)
+      setJoinRoomId('')
+      setJoinTitle('')
+      return
+    }
+
+    const now = Date.now()
+    const doc: DocItem = {
+      id: roomId,
+      title: joinTitle.trim() || `공유 문서 (${roomId.slice(0, 6)})`,
+      updatedAt: now,
+    }
+
+    const next = [doc, ...docs].sort((a, b) => b.updatedAt - a.updatedAt)
+    setDocs(next)
+    saveDocs(next)
+    setSelectedDocId(doc.id)
+    setJoinRoomId('')
+    setJoinTitle('')
+  }
+
   const deleteDoc = (docId: string) => {
     if (docs.length === 1) return
     const next = docs.filter((d) => d.id !== docId)
@@ -378,6 +407,34 @@ function App() {
               }}
             />
             <button onClick={createDoc} aria-label="새 문서 생성">생성</button>
+          </div>
+
+          <div className="joinDoc cardLite">
+            <label htmlFor="join-room-id" className="srOnly">참여할 Room ID</label>
+            <input
+              id="join-room-id"
+              value={joinRoomId}
+              onChange={(e) => setJoinRoomId(e.target.value)}
+              placeholder="공유받은 Room ID"
+              aria-label="공유받은 Room ID"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') joinDoc()
+              }}
+            />
+            <label htmlFor="join-doc-title" className="srOnly">문서 별칭 (선택)</label>
+            <input
+              id="join-doc-title"
+              value={joinTitle}
+              onChange={(e) => setJoinTitle(e.target.value)}
+              placeholder="문서 이름 (선택)"
+              aria-label="문서 이름 (선택)"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') joinDoc()
+              }}
+            />
+            <button className="ghost" onClick={joinDoc} aria-label="Room ID로 문서 참여">
+              Room 참여
+            </button>
           </div>
 
           <div className="docSearch">
