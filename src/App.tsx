@@ -157,6 +157,7 @@ function App() {
   const updateTimestampTimer = useRef<number | null>(null)
   const copyStatusTimer = useRef<number | null>(null)
   const deleteConfirmTimer = useRef<number | null>(null)
+  const docSearchInputRef = useRef<HTMLInputElement | null>(null)
 
   const selectedDoc = docs.find((d) => d.id === selectedDocId) ?? docs[0]
   const filteredDocs = useMemo(() => {
@@ -185,6 +186,23 @@ function App() {
       if (deleteConfirmTimer.current) window.clearTimeout(deleteConfirmTimer.current)
     }
   }, [])
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        docSearchInputRef.current?.focus()
+        docSearchInputRef.current?.select()
+      }
+
+      if (event.key === 'Escape' && document.activeElement === docSearchInputRef.current && docQuery) {
+        setDocQuery('')
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [docQuery])
 
   const { ydoc, provider, persistence } = useMemo(() => {
     const room = selectedDoc?.id ?? 'jobhunt-frontend-room'
@@ -437,20 +455,24 @@ function App() {
             </button>
           </div>
 
-          <div className="docSearch">
-            <label htmlFor="doc-search" className="srOnly">문서 검색</label>
-            <input
-              id="doc-search"
-              value={docQuery}
-              onChange={(e) => setDocQuery(e.target.value)}
-              placeholder="문서 제목/Room ID 검색"
-              aria-label="문서 검색"
-            />
-            {docQuery && (
-              <button className="ghost clearSearchBtn" onClick={() => setDocQuery('')} aria-label="검색어 지우기">
-                지우기
-              </button>
-            )}
+          <div className="docSearchWrap">
+            <div className="docSearch">
+              <label htmlFor="doc-search" className="srOnly">문서 검색</label>
+              <input
+                id="doc-search"
+                ref={docSearchInputRef}
+                value={docQuery}
+                onChange={(e) => setDocQuery(e.target.value)}
+                placeholder="문서 제목/Room ID 검색"
+                aria-label="문서 검색 (단축키: Ctrl/Cmd+K)"
+              />
+              {docQuery && (
+                <button className="ghost clearSearchBtn" onClick={() => setDocQuery('')} aria-label="검색어 지우기">
+                  지우기
+                </button>
+              )}
+            </div>
+            <p className="docSearchHint" aria-hidden="true">단축키: Ctrl/Cmd + K · Esc로 검색어 지우기</p>
           </div>
 
           <ul className="docList">
