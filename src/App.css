@@ -83,10 +83,19 @@ h1 {
   background: #f9fafb;
 }
 
-.docSearch {
+.docSearchWrap {
   margin-top: 8px;
+}
+
+.docSearch {
   display: flex;
   gap: 8px;
+}
+
+.docSearchHint {
+  margin: 6px 2px 0;
+  font-size: 0.77rem;
+  color: #6b7280;
 }
 
 .docSearch input {
