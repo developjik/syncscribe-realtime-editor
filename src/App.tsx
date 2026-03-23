@@ -39,6 +39,19 @@ function uid() {
   return crypto.randomUUID().slice(0, 8)
 }
 
+function createRoomIdFromTitle(title: string) {
+  const normalized = title
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 40)
+
+  return normalized ? `${normalized}-${uid()}` : `doc-${uid()}`
+}
+
 function defaultDocs(): DocItem[] {
   return [{ id: 'jobhunt-frontend-room', title: '취업 준비 협업 문서', updatedAt: Date.now() }]
 }
@@ -299,9 +312,10 @@ function App() {
 
   const createDoc = () => {
     if (!newTitle.trim()) return
+    const title = newTitle.trim()
     const doc: DocItem = {
-      id: `${newTitle.toLowerCase().replace(/\s+/g, '-')}-${uid()}`,
-      title: newTitle.trim(),
+      id: createRoomIdFromTitle(title),
+      title,
       updatedAt: Date.now(),
     }
     const next = [doc, ...docs]
